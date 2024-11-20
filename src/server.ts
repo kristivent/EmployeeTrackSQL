@@ -1,80 +1,82 @@
 import inquirer from 'inquirer';
-import { QueryResult } from 'pg';
 import { pool, connectToDb } from './connection.js';
 
-await connectToDb();
+const startApp = async () => {
+  await connectToDb();
 
-const main = async () => {
-  const { action } = await inquirer.prompt([
-    {
-      type: 'list',
-      name: 'action',
-      message: 'What do you want to do?',
-      choices: [
-        'View all departments',
-        'View all roles',
-        'View all employees',
-        'Add a department',
-        'Add a role',
-        'Add an employee',
-        'Update an employee role',
-      ],
-    },
-  ]);
+  const main = async () => {
+    const { action } = await inquirer.prompt([
+      {
+        type: 'list',
+        name: 'action',
+        message: 'What do you want to do?',
+        choices: [
+          'View all departments',
+          'View all roles',
+          'View all employees',
+          'Add a department',
+          'Add a role',
+          'Add an employee',
+          'Update an employee role',
+        ],
+      },
+    ]);
 
-  switch (action) {
-    case 'View all departments':
-      viewAllDepartments();
-      break;
-    case 'View all roles':
-      viewAllRoles();
-      break;
-    case 'View all employees':
-      viewAllEmployees();
-      break;
-    case 'Add a department':
-      addDepartment();
-      break;
-    case 'Add a role':
-      addRole();
-      break;
-    case 'Add an employee':
-      addEmployee();
-      break;
-    case 'Update an employee role':
-      updateEmployeeRole();
-      break;
+    switch (action) {
+      case 'View all departments':
+        await viewAllDepartments();
+        break;
+      case 'View all roles':
+        await viewAllRoles();
+        break;
+      case 'View all employees':
+        await viewAllEmployees();
+        break;
+      case 'Add a department':
+        await addDepartment();
+        break;
+      case 'Add a role':
+        await addRole();
+        break;
+      case 'Add an employee':
+        await addEmployee();
+        break;
+      case 'Update an employee role':
+        await updateEmployeeRole();
+        break;
+    }
+
+    main();
+  };
+
+  main();
+};
+
+const viewAllDepartments = async () => {
+  try {
+    const result = await pool.query('SELECT id, name FROM department');
+    console.table(result.rows);
+  } catch (err) {
+    console.error(err);
   }
 };
 
-const viewAllDepartments = () => {
-  pool.query('SELECT id, name FROM departments', (err: Error, result: QueryResult) => {
-    if (err) {
-      console.log(err);
-    } else {
-      console.table(result.rows);
-    }
-  });
+const viewAllRoles = async () => {
+  try {
+    const result = await pool.query('SELECT role.id, role.title, department.name AS department, role.salary FROM role JOIN department ON role.department_id = department.id');
+    console.table(result.rows);
+  } catch (err) {
+    console.error(err);
+  }
 };
 
-const viewAllRoles = () => {
-  pool.query('SELECT roles.id, roles.title, departments.name AS department, roles.salary FROM roles JOIN departments ON roles.department_id = departments.id', (err: Error, result: QueryResult) => {
-    if (err) {
-      console.log(err);
-    } else {
-      console.table(result.rows);
-    }
-  });
-};
-
-const viewAllEmployees = () => {
-  pool.query('SELECT employees.id, employees.first_name, employees.last_name, roles.title, departments.name AS department, roles.salary, managers.first_name AS manager_first_name, managers.last_name AS manager_last_name FROM employees JOIN roles ON employees.role_id = roles.id JOIN departments ON roles.department_id = departments.id LEFT JOIN employees AS managers ON employees.manager_id = managers.id', (err: Error, result: QueryResult) => {
-    if (err) {
-      console.log(err);
-    } else {
-      console.table(result.rows);
-    }
-  });
+const viewAllEmployees = async () => {
+  try {
+    const result = await pool.query('SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name AS department, role.salary, manager.first_name AS manager_first_name, manager.last_name AS manager_last_name FROM employee JOIN role ON employee.role_id = role.id JOIN department ON role.department_id = department.id LEFT JOIN employee AS manager ON employee.manager_id = manager.id');
+    console.table(result.rows);
+  } catch (err) {
+    console.error(err);
+  }
 };
 
 const addDepartment = async () => {
@@ -86,13 +88,12 @@ const addDepartment = async () => {
     },
   ]);
 
-  pool.query('INSERT INTO departments (name) VALUES ($1)', [name], (err: Error, result: QueryResult) => {
-    if (err) {
-      console.log(err);
-    } else {
-      console.log('Department added successfully!');
-    }
-  });
+  try {
+    await pool.query('INSERT INTO department (name) VALUES ($1)', [name]);
+    console.log('Department added successfully!');
+  } catch (err) {
+    console.error(err);
+  }
 };
 
 const addRole = async () => {
@@ -114,13 +115,12 @@ const addRole = async () => {
     },
   ]);
 
-  pool.query('INSERT INTO roles (title, salary, department_id) VALUES ($1, $2, $3)', [title, salary, department_id], (err: Error, result: QueryResult) => {
-    if (err) {
-      console.log(err);
-    } else {
-      console.log('Role added successfully!');
-    }
-  });
+  try {
+    await pool.query('INSERT INTO role (title, salary, department_id) VALUES ($1, $2, $3)', [title, salary, department_id]);
+    console.log('Role added successfully!');
+  } catch (err) {
+    console.error(err);
+  }
 };
 
 const addEmployee = async () => {
@@ -147,13 +147,12 @@ const addEmployee = async () => {
     },
   ]);
 
-  pool.query('INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES ($1, $2, $3, $4)', [first_name, last_name, role_id, manager_id || null], (err: Error, result: QueryResult) => {
-    if (err) {
-      console.log(err);
-    } else {
-      console.log('Employee added successfully!');
-    }
-  });
+  try {
+    await pool.query('INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ($1, $2, $3, $4)', [first_name, last_name, role_id, manager_id || null]);
+    console.log('Employee added successfully!');
+  } catch (err) {
+    console.error(err);
+  }
 };
 
 const updateEmployeeRole = async () => {
@@ -170,13 +169,12 @@ const updateEmployeeRole = async () => {
     },
   ]);
 
-  pool.query('UPDATE employees SET role_id = $1 WHERE id = $2', [new_role_id, employee_id], (err: Error, result: QueryResult) => {
-    if (err) {
-      console.log(err);
-    } else {
-      console.log('Employee role updated successfully!');
-    }
-  });
+  try {
+    await pool.query('UPDATE employee SET role_id = $1 WHERE id = $2', [new_role_id, employee_id]);
+    console.log('Employee role updated successfully!');
+  } catch (err) {
+    console.error(err);
+  }
 };
 
-main();
+startApp();
