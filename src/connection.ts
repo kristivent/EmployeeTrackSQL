@@ -1,8 +1,6 @@
-//import dotenv and call 
 import dotenv from 'dotenv';
 dotenv.config();
 
-//import and require postgres
 import pg from 'pg';
 const { Pool } = pg;
 
