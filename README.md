@@ -28,5 +28,5 @@
 
   ## Questions
   For any questions, please reach out via GitHub [kristivent](https://github.com/kristivent) or email at ventk84@gmail.com.
-  Link to video: 
+  Link to video: https://drive.google.com/file/d/1pxgjlspzJ81vTV20guXvxDQ2rEk62Hsd/view
   Code created from scratch with use of sample code in BootcampSpot class repo and Google/Copilot searches for additional resources as needed.
